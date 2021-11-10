@@ -1,8 +1,8 @@
 import pandas as pd
 import time
+import re
 
 # Sklearn
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 
 # Classifier
@@ -16,15 +16,7 @@ tfvect = TfidfVectorizer(stop_words='english', max_df=0.90)
 # PassiveAggressive Classifier initialisieren
 classifier = PassiveAggressiveClassifier()
 
-def train_model(df):
-
-    X = df['text']
-    y = df['category']
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-
-    # TFIDF Vectorizer verwenden
-    #tfvect = TfidfVectorizer(stop_words='english', max_df=0.90)
+def train_model(X_train, X_test, y_train):
 
     # Train und Test mit fit_transform in eine Matrix konvertieren / vektorisieren
     tfid_x_train = tfvect.fit_transform(X_train.astype('U').values)
@@ -49,3 +41,33 @@ def check_fake_news(news):
         return "Fake"
     else:
         return ""
+
+
+def overlap_training_data(news, X_train):
+    ''' Funktion, die prüft, zu welchem Prozentsatz die Wörter eines Strings
+    in den Trainingsdaten enthalten sind'''
+
+    input_data = news
+    list_of_words = []
+
+    for word in input_data:
+        list_of_words = input_data.split()
+
+    # Sonderzeichen entfernen
+    list_of_words = [re.sub('[^a-zA-Z0-9]+', '', word) for word in list_of_words]
+
+    # Leere Elemente in der Liste aussortieren
+    list_of_words = [x for x in list_of_words if x]
+
+    count_enthalten = 0
+    count_not_enthalten = 0
+
+    # Zusammenzählen
+    for word in list_of_words:
+        res = set(X_train.str.contains(word.lower(), regex=False))
+        if True in res:
+            count_enthalten += 1
+        else:
+            count_not_enthalten += 1
+
+    return round((count_enthalten / len(list_of_words) * 100), 2)
