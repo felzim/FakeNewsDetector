@@ -10,12 +10,10 @@ stopwords = set(stopwords)
 df_fake = pd.read_csv(config.DATA_FAKE)
 df_true = pd.read_csv(config.DATA_TRUE)
 
-### TODO:
-## Reuters entfernen
 
 def process(df_true_ = df_true, df_fake_ = df_fake, list_of_dropwords=[]):
     ''' Funktion, die aus zwei Dataframes einen neuen zusammensetzt und diesen bereinigt
-        Es kann eine Liste von Wörtern mit übergeben werden, die aus dem neuen DF herausgefiltert werden
+        Es kann optional eine Liste von Wörtern mit übergeben werden, die dann aus dem neuen DF herausgefiltert werden
     '''
 
     # vor dem Zusammensetzen das target festschreiben

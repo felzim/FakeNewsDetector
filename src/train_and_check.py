@@ -2,10 +2,7 @@ import pandas as pd
 import time
 import re
 
-# Sklearn
-from sklearn.feature_extraction.text import CountVectorizer
-
-# Classifier
+# Sklearn und Classifier
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -16,22 +13,24 @@ tfvect = TfidfVectorizer(stop_words='english', max_df=0.90)
 # PassiveAggressive Classifier initialisieren
 classifier = PassiveAggressiveClassifier()
 
-def train_model(X_train, X_test, y_train):
+
+def train_model(X_train, y_train):
 
     # Train und Test mit fit_transform in eine Matrix konvertieren / vektorisieren
-    tfid_x_train = tfvect.fit_transform(X_train.astype('U').values)
-    tfid_x_test = tfvect.transform(X_test)
+    tfidf_x_train = tfvect.fit_transform(X_train.astype('U').values)
 
-    classifier.fit(tfid_x_train, y_train)
+    # Classifier trainieren
+    classifier.fit(tfidf_x_train, y_train)
 
 
-def check_fake_news(news):
+def detect_fake_news(news):
     ''' Diese Funktion gibt für einen beliebigen String eine eindeutige Klassifizierung, ob True oder Fake
     Dafür nutzt sie den zuvor trainierten Classifier.
     '''
 
-
     input_data = [news]
+
+    # eingegebenen Text mit dem bereits gefitteten Modell in numerisches Format transformieren
     vectorized_input_data = tfvect.transform(input_data)
     prediction = classifier.predict(vectorized_input_data)
 

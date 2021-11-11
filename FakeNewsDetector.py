@@ -1,85 +1,106 @@
 import pandas as pd
+import joblib
 from sklearn.model_selection import train_test_split
 
 from src import config
 from src import feature_processing
-from src import train
+from src import train_and_check
 
 import dash
+from dash import callback_context
 from dash.dependencies import Input, Output, State
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
+
+
+####################### Simple Fake News Detector 0.1
+########## Autor: Felix Zimmermann
+#
+#    Diese sehr einfache Demo baut auf einem Datensatz von kaggle.com auf, das insgesamt 17.903 als
+#    Fake-News und 20.826 als True-News gelabelte Nachrichten enthält.
+#    (Link: https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset)
+#
+#    Ziel ist es, einen beliebigen, englischsprachigen Text entweder als "Fake-News"
+#    oder als "Real News" zu klassifizieren. Hierzu wurde der Datensatz zunächst bereinigt
+#    (feature_processing.py). Anschließend werden mit Hilfe des Tfidf-Vectorizers aus Sklearn die
+#    unstrukturierten in numerische Daten überführt und mit dem PassiveAggressiveClassifier ein
+#    predict ausgeführt.
 
 
 
-# Initiale Daten laden und Modell trainieren
+# Den bereits bereinigten Datensatz laden
 df = pd.read_csv(config.PROCESSED_DATA)
 
+# Split in Trainings- und Testdaten
 X = df['text']
 y = df['category']
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
+# Modell trainieren
+train_and_check.train_model(X_train, y_train)
 
-train.train_model(X_train, X_test, y_train)
 
 
-
+# Web-Interface auf 127.0.0.1:8050
 def run_dash():
 
     app = dash.Dash(__name__)
 
     app.layout = html.Div([
 
+        html.Link(
+            rel='stylesheet',
+            href='assets/custom_loader.css'
+        ),
+
         html.H1('Hello, I\'m a very simple Fake News Detector', style={'textAlign': 'center'}),
 
-        html.Label('Bitte einen Datensatz auswählen '),
-        dcc.Dropdown(
-            id='demo-dropdown',
-            options=[
-                {'label': 'Datensatz 1', 'value': 'd1'},
-            ],
-            value='d1'
+        dcc.Textarea(
+            id='textarea-status',
+            value='True / Fake?',
+            style={'width': '50%', 'height': 200},
         ),
 
-        dcc.Textarea(
-            id='textarea-state-example',
-            value='Bitte einen Text / Artikel in englischer Sprache eingeben.',
-            style={'width': '100%', 'height': 200},
-        ),
 
         html.P(),
-        html.Button('Prüfen', id='textarea-state-example-button', n_clicks=0),
-        html.Div(id='textarea-state-example-output', style={'whiteSpace': 'pre-line'})
+        html.Button('Text prüfen', id='text-pruefen-button', n_clicks=0),
+        html.Div(id='textarea-status-output', style={'whiteSpace': 'pre-line',
+                                                     'font-size': '0.9em',
+                                                     'height': 150}),
+
+        html.Span("Sonstiges: "),
+        html.Button('Feature processing ausführen', id='processing-button', n_clicks=0),
+        html.P(),
+
     ])
 
     @app.callback(
 
-        Output('textarea-state-example-output', 'children'),
-        Input('textarea-state-example-button', 'n_clicks'),
-        State('textarea-state-example', 'value')
+        Output('textarea-status-output', 'children'),
+
+        [Input('text-pruefen-button', 'n_clicks'),
+         Input('processing-button', 'n_clicks')],
+        State('textarea-status', 'value')
     )
-    def update_output(n_clicks, value):
+    def update_output(btn1, btn2, value):
 
-        res = train.check_fake_news(value)
-        overlap = train.overlap_training_data(value, X_train)
+        if len(value) > 0:
+            res = train_and_check.detect_fake_news(value)
+            overlap = train_and_check.overlap_training_data(value, X_train)
 
-        if n_clicks > 0:
-            return f'\n\n Eingegebener Text: {format(value)}' \
-                   f'\n\n Klassifiziert als: {res}' \
-                   f'\n\n Overlap: {overlap}% der eingegebenen Wörter sind in den Trainingsdaten enthalten.'
+            changed_id = [p['prop_id'] for p in callback_context.triggered][0]
 
-    @app.callback(
+            if 'text-pruefen-button' in changed_id:
+                return  f'\n\n Klassifiziert als: {res}' \
+                        f'\n\n Overlap: {overlap}% der eingegebenen Wörter sind in den Trainingsdaten enthalten.'
 
-        Output('dd-out put-container', 'children'),
-        Input('demo-dropdown', 'value'),
-    )
-    def update_data(childen):
-        return 'You have selected "{}"'.format(childen)
+            elif 'processing-button' in changed_id:
+                feature_processing.process()
+                return f'\n\n Feature processing abgeschlossen.'
+
 
 
     app.run_server(debug=True)
-
 
 
 # Dashboard starten
