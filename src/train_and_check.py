@@ -1,9 +1,8 @@
-import pandas as pd
-import time
 import re
 
 # Sklearn und Classifier
 from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.svm import LinearSVC
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
@@ -12,15 +11,17 @@ tfvect = TfidfVectorizer(stop_words='english', max_df=0.90)
 
 # PassiveAggressive Classifier initialisieren
 classifier = PassiveAggressiveClassifier()
+classifier2 = LinearSVC()
 
 
-def train_model(X_train, y_train):
+def train_model(X_train, y_train, X_test, y_test):
 
     # Train und Test mit fit_transform in eine Matrix konvertieren / vektorisieren
     tfidf_x_train = tfvect.fit_transform(X_train.astype('U').values)
 
     # Classifier trainieren
-    classifier.fit(tfidf_x_train, y_train)
+    #classifier.fit(tfidf_x_train, y_train)
+    classifier2.fit(tfidf_x_train, y_train)
 
 
 def detect_fake_news(news):
@@ -32,14 +33,15 @@ def detect_fake_news(news):
 
     # eingegebenen Text mit dem bereits gefitteten Modell in numerisches Format transformieren
     vectorized_input_data = tfvect.transform(input_data)
-    prediction = classifier.predict(vectorized_input_data)
+    prediction = classifier2.predict(vectorized_input_data)[0]
 
+    if prediction == 0:
+        return ["Fake", classifier2.decision_function(vectorized_input_data)[0]]
     if prediction == 1:
-         return "True"
-    elif prediction == 0:
-        return "Fake"
-    else:
-        return ""
+         return ["True", classifier2.decision_function(vectorized_input_data)[0]]
+
+
+
 
 
 def overlap_training_data(news, X_train):
