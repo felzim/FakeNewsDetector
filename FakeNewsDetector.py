@@ -204,7 +204,7 @@ class FakeNewsDetector():
 
             html.Div([
 
-                    html.H2('Hi, I\'m a very simple Fake News Detector',
+                    html.H2('A very simple Fake News Detector',
                         style={'font-family': 'Georgia'}),
 
 
@@ -219,7 +219,7 @@ class FakeNewsDetector():
                     dcc.Textarea(
                         id='textarea-status',
                         value=self.X_raw[np.random.randint(len(self.X_raw))],
-                        style={'width': '100%','height': 200, 'margin-top': '1em', 'padding': '12px'},
+                        style={'width': '100%','height': '200px', 'margin-top': '1em', 'padding': '12px', 'background-color': '#fbfbfb', 'font-family':'Calibri, sans-serif', 'color':'#353535'},
                     ),
 
 
@@ -237,7 +237,7 @@ class FakeNewsDetector():
                         ),
 
                     ],
-                    style={'margin-top': '0.2em', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'flex-end', 'align-items': 'center', 'gap': '15px'}),
+                    style={'margin-top': '0.5em', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'space-between', 'align-items': 'flex-start', 'gap': '15px', 'height':'100px'}),
 
 
                     html.P(
@@ -323,12 +323,12 @@ class FakeNewsDetector():
                     overlap = self.overlap_training_data(textarea_value)
 
 
-                    return  f'\n\n Klassifiziert als: {detection[0]}'
-                            #f'\n\n Decision Function: {round( detection[1],2)}' \
-                            #f'\n\n Overlap: {overlap}%'
+                    return  f'Klassifiziert als: {detection[0]}' \
+                            f'\n\n Decision Function: {round( detection[1],2)}' \
+                            f'\n\n X_train overlap: {overlap}%'
 
 
-            return f'\n\n Klassifiziert als: -'
+            return f'\n\n Klassifiziert als:'
 
 
         @app.callback(
